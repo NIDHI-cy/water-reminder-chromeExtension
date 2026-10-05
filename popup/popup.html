@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Max's Water Reminder</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Subtle 80s Grid Background -->
+    <div class="synth-grid"></div>
+
+    <!-- Top Glow Line -->
+    <div class="neon-line"></div>
+
+    <!-- Header Section -->
+    <header class="header">
+      <div class="brand">
+        <span class="brand-drop">💧</span>
+        <div class="brand-text">
+          <h1 class="brand-title">MAX'S WATER REMINDER</h1>
+          <span class="brand-subtitle">HAWKINS HYDRATION COMPANION</span>
+        </div>
+      </div>
+      <div class="status-pill active" id="status-pill">
+        <span class="status-dot"></span>
+        <span class="status-label" id="status-label">Active</span>
+      </div>
+    </header>
+
+    <!-- Hero Character & Countdown Card -->
+    <section class="hero-card">
+      <div class="avatar-wrapper">
+        <div class="avatar-glow"></div>
+        <img src="../assets/characters/max-avatar.svg" 
+             alt="Max" 
+             class="avatar-img"
+             id="avatar-img"
+             onerror="this.onerror=null; this.src='../assets/characters/max-avatar.png'">
+      </div>
+
+      <div class="timer-section">
+        <div class="timer-caption">NEXT REMINDER IN</div>
+        <div class="countdown" id="countdown-timer">30:00</div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <button class="btn-primary-drink" id="btn-quick-drink">
+        <span>I DRANK</span>
+        <span class="btn-icon">💧</span>
+      </button>
+    </section>
+
+    <!-- Stats Dashboard Row -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-title">SESSION TIME</span>
+        <span class="stat-value" id="stat-session-time">0m</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-title">SESSION DRINKS</span>
+        <span class="stat-value highlight" id="stat-session-drinks">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-title">TODAY'S TOTAL</span>
+        <span class="stat-value neon" id="stat-today-drinks">0 💧</span>
+      </div>
+    </section>
+
+    <!-- Mode Selector (Production vs Dev Mode) -->
+    <section class="mode-section">
+      <div class="mode-label-row">
+        <span class="section-title">REMINDER INTERVAL</span>
+        <span class="mode-tag" id="current-mode-tag">30 MIN</span>
+      </div>
+      <div class="segmented-control">
+        <button class="segment-btn active" id="btn-mode-prod" data-mode="prod">
+          <span>Production</span>
+          <small>30 min</small>
+        </button>
+        <button class="segment-btn" id="btn-mode-dev" data-mode="dev">
+          <span>🧪 Dev Test</span>
+          <small>1 min</small>
+        </button>
+      </div>
+    </section>
+
+    <!-- Action Controls -->
+    <section class="actions-section">
+      <button class="action-btn" id="btn-test-reminder">
+        <span class="action-icon">⚡</span>
+        <span>Test Reminder Card</span>
+      </button>
+      <button class="action-btn" id="btn-reset-session">
+        <span class="action-icon">🔄</span>
+        <span>Reset Session</span>
+      </button>
+    </section>
+
+    <!-- Settings Drawer / Toggle Row -->
+    <footer class="footer-settings">
+      <div class="setting-toggle-row">
+        <span class="setting-label">Enable Reminders</span>
+        <label class="switch">
+          <input type="checkbox" id="toggle-active" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-toggle-row">
+        <span class="setting-label">80s Synth Chime</span>
+        <label class="switch">
+          <input type="checkbox" id="toggle-sound" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
