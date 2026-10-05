@@ -1,5 +1,5 @@
 /**
- * Max's Water Reminder - Shared Constants
+ * Max's Water Reminder - Shared Constants (Cute Duck Edition)
  */
 
 export const ALARM_NAME = 'max_water_reminder_alarm';
@@ -17,21 +17,14 @@ export const MESSAGE_TYPES = {
   GET_STATE: 'MAX_GET_STATE',
   UPDATE_SETTINGS: 'MAX_UPDATE_SETTINGS',
   RESET_SESSION: 'MAX_RESET_SESSION',
-  TRIGGER_TEST_REMINDER: 'MAX_TRIGGER_TEST_REMINDER',
-  LOG_MANUAL_DRINK: 'MAX_LOG_MANUAL_DRINK',
-  STATE_UPDATED: 'MAX_STATE_UPDATED'
+  TRIGGER_TEST_REMINDER: 'MAX_TRIGGER_TEST_REMINDER'
 };
 
 export const DEFAULT_SETTINGS = {
   timerActive: true,
-  isDevMode: false,
-  prodIntervalMinutes: 30,
-  devIntervalMinutes: 1,
-  snoozeIntervalMinutes: 5,
-  sessionGapThresholdMinutes: 20, // Inactivity/sleep > 20m starts a new session
-  idleDetectionSeconds: 300, // 5 min idle detection
-  soundEnabled: true,
-  notificationFallbackEnabled: true
+  intervalMinutes: 30, // 30-minute reminder interval
+  sessionGapThresholdMinutes: 20, // Inactivity/sleep > 20m resets session
+  soundEnabled: true
 };
 
 export const DEFAULT_STATE = {
@@ -41,25 +34,17 @@ export const DEFAULT_STATE = {
   nextReminderTimestamp: null,
   lastReminderTimestamp: null,
   lastHydrationTimestamp: null,
-  sessionGlassesDrank: 0,
-  totalGlassesDrank: 0,
   todayGlassesDrank: 0,
   todayDateStr: '',
-  remindersCompleted: 0,
   isReminderActiveOnScreen: false
 };
 
-export const MAX_QUOTES = [
-  "Hey! 💧 You've been here for 30 minutes. Drink some water!",
-  "Hydration check! Go grab your water bottle. 💧",
-  "Okay, you've been staring at that screen long enough. Water break!",
-  "Your brain needs water too, you know. 💧",
-  "Quick hydration break? You've got this! 💙",
-  "Water. Now. Future you will thank you. 💧",
-  "Running up that hill requires proper hydration. Drink up! 🎧",
-  "Don't let the Upside Down dry you out. Grab some water! 🚲",
-  "Time to recharge! Even skaters need water stops. 🛹",
-  "Hey, pause the mixtape for a second and take a sip! 📼💧",
-  "Stay fresh! One cool sip makes all the difference. 🌊",
-  "You've been kicking butt today. Reward yourself with water! 💧✨"
+export const DUCK_QUOTES = [
+  "Quack! 💧 Time to drink some water.",
+  "Duck reminder: Go grab your water bottle! 🦆",
+  "Hydration check! Go take a water break. 💧",
+  "You've been working for 30 minutes. Water time! 🌊",
+  "Duck is waiting... go take a sip! 🦆💧",
+  "Stay healthy! Drink a fresh glass of water. 💧",
+  "Quack quack! Quick water break! 🦆"
 ];

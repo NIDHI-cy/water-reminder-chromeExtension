@@ -1,5 +1,5 @@
 /**
- * Max's Water Reminder - Extension Validator
+ * Duck's Water Reminder - Extension Validator
  * Validates manifest.json, directory structure, files, and configuration before packaging.
  */
 
@@ -23,12 +23,7 @@ function logFail(msg) {
   errors++;
 }
 
-function logWarn(msg) {
-  console.warn(`\x1b[33m▲ WARN:\x1b[0m ${msg}`);
-  warnings++;
-}
-
-console.log('--- Validating Max\'s Water Reminder Chrome Extension ---');
+console.log('--- Validating Duck\'s Water Reminder Chrome Extension ---');
 
 // 1. Manifest
 const manifestPath = path.join(rootDir, 'manifest.json');
@@ -93,47 +88,31 @@ for (const size of iconSizes) {
 }
 
 // 5. Content Scripts
-if (!manifest.content_scripts || manifest.content_scripts.length === 0) {
-  logFail('manifest content_scripts missing');
-} else {
-  for (const cs of manifest.content_scripts) {
-    for (const js of cs.js || []) {
-      const csAbs = path.join(rootDir, js);
-      if (fs.existsSync(csAbs)) {
-        logPass(`Content script exists: ${js}`);
-      } else {
-        logFail(`Content script NOT found: ${csAbs}`);
-      }
+for (const cs of manifest.content_scripts || []) {
+  for (const js of cs.js || []) {
+    const csAbs = path.join(rootDir, js);
+    if (fs.existsSync(csAbs)) {
+      logPass(`Content script exists: ${js}`);
+    } else {
+      logFail(`Content script NOT found: ${csAbs}`);
     }
   }
 }
 
-// 6. Character Avatars
-const avatarSvg = path.join(rootDir, 'assets', 'characters', 'max-avatar.svg');
-const avatarPng = path.join(rootDir, 'assets', 'characters', 'max-avatar.png');
-if (fs.existsSync(avatarSvg)) {
-  logPass('Max avatar SVG exists: assets/characters/max-avatar.svg');
+// 6. Duck Sprite
+const duckPng = path.join(rootDir, 'assets', 'characters', 'duck.png');
+if (fs.existsSync(duckPng)) {
+  logPass('Duck character sprite exists: assets/characters/duck.png');
 } else {
-  logFail('Max avatar SVG NOT found: assets/characters/max-avatar.svg');
-}
-if (fs.existsSync(avatarPng)) {
-  logPass('Max avatar PNG exists: assets/characters/max-avatar.png');
-} else {
-  logFail('Max avatar PNG NOT found: assets/characters/max-avatar.png');
+  logFail('Duck character sprite NOT found: assets/characters/duck.png');
 }
 
-// 7. Verify Production Default Interval
+// 7. Verify 30-Minute Interval
 import('../shared/constants.js').then(({ DEFAULT_SETTINGS }) => {
-  if (DEFAULT_SETTINGS.prodIntervalMinutes === 30) {
-    logPass('Production default interval is set to 30 minutes');
+  if (DEFAULT_SETTINGS.intervalMinutes === 30) {
+    logPass('Reminder interval is set to exactly 30 minutes');
   } else {
-    logFail(`Production interval is ${DEFAULT_SETTINGS.prodIntervalMinutes}m, expected 30m`);
-  }
-
-  if (DEFAULT_SETTINGS.isDevMode === false) {
-    logPass('Default mode is Production (isDevMode: false)');
-  } else {
-    logFail('Default mode must NOT be dev mode');
+    logFail(`Reminder interval is ${DEFAULT_SETTINGS.intervalMinutes}m, expected 30m`);
   }
 
   console.log('\n--- Summary ---');

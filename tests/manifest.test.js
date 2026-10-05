@@ -1,5 +1,5 @@
 /**
- * Max's Water Reminder - Manifest & Configuration Validation Tests
+ * Duck's Water Reminder - Manifest & Configuration Validation Tests
  */
 
 import test from 'node:test';
@@ -22,7 +22,7 @@ test('Manifest V3 Schema Validation', () => {
   const manifest = JSON.parse(content);
 
   assert.equal(manifest.manifest_version, 3, 'Must be Manifest V3');
-  assert.equal(manifest.name, "Max's Water Reminder", 'Name must match');
+  assert.equal(manifest.name, "Duck's Water Reminder", 'Name must match');
   assert.ok(manifest.version, 'Must specify version');
   assert.ok(manifest.description, 'Must specify description');
 
@@ -56,25 +56,15 @@ test('Manifest V3 Schema Validation', () => {
 
   // Verify web accessible resources
   assert.ok(Array.isArray(manifest.web_accessible_resources), 'web_accessible_resources must exist');
-  const avatarPath = path.join(rootDir, 'assets', 'characters', 'max-avatar.svg');
-  assert.ok(fs.existsSync(avatarPath), 'Max avatar SVG must exist');
+  const duckPath = path.join(rootDir, 'assets', 'characters', 'duck.png');
+  assert.ok(fs.existsSync(duckPath), 'Duck character image must exist');
 });
 
-test('Production vs Development Defaults Validation', () => {
+test('Interval Validation - Exactly 30 Minutes', () => {
   assert.equal(
-    DEFAULT_SETTINGS.isDevMode,
-    false,
-    'Production default must NOT have isDevMode enabled'
-  );
-  assert.equal(
-    DEFAULT_SETTINGS.prodIntervalMinutes,
+    DEFAULT_SETTINGS.intervalMinutes,
     30,
-    'Production interval must be 30 minutes'
-  );
-  assert.equal(
-    DEFAULT_SETTINGS.devIntervalMinutes,
-    1,
-    'Development interval must be 1 minute'
+    'Reminder interval must be exactly 30 minutes'
   );
   assert.equal(
     DEFAULT_SETTINGS.sessionGapThresholdMinutes,

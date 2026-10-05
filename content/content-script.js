@@ -1,103 +1,79 @@
 /**
- * Max's Water Reminder - Content Script
- * Executes in webpage context. Uses Shadow DOM to isolate styles completely.
- * Self-contained for zero-latency instant rendering and 100% CSP compatibility.
+ * Duck Water Reminder - Content Script
+ * Displays a cute, cozy floating reminder card in the top-right corner.
+ * Encapsulated via Shadow DOM with zero styling bleed.
  */
 
 (function () {
   'use strict';
 
-  // Prevent double injection of content script
-  if (window.__MAX_WATER_REMINDER_INJECTED__) return;
-  window.__MAX_WATER_REMINDER_INJECTED__ = true;
+  if (window.__DUCK_WATER_REMINDER_INJECTED__) return;
+  window.__DUCK_WATER_REMINDER_INJECTED__ = true;
 
   const MESSAGE_TYPES = {
     SHOW_REMINDER: 'MAX_SHOW_REMINDER',
     HIDE_REMINDER: 'MAX_HIDE_REMINDER',
-    CONFIRM_HYDRATION: 'MAX_CONFIRM_HYDRATION',
-    SNOOZE_REMINDER: 'MAX_SNOOZE_REMINDER'
+    CONFIRM_HYDRATION: 'MAX_CONFIRM_HYDRATION'
   };
 
-  // Web Audio 80s Synth Tones
+  // Gentle synth chime for water reminders
   let audioCtx = null;
   function getAudioContext() {
     try {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return null;
-      if (!audioCtx) audioCtx = new AudioContextClass();
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {});
-      }
+      const AudioClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioClass) return null;
+      if (!audioCtx) audioCtx = new AudioClass();
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       return audioCtx;
     } catch {
       return null;
     }
   }
 
-  function playTone(type) {
+  function playChime(isVictory = false) {
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
       const now = ctx.currentTime;
 
-      if (type === 'reminder') {
-        // Dreamy 80s chord arpeggio
-        const notes = [659.25, 830.61, 987.77, 1318.51];
-        notes.forEach((freq, idx) => {
+      if (!isVictory) {
+        // Soft water drop chord: C5 -> E5 -> G5
+        const notes = [523.25, 659.25, 783.99];
+        notes.forEach((freq, i) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          const filter = ctx.createBiquadFilter();
-
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(2400, now);
-
-          osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.12);
-
-          const start = now + idx * 0.12;
-          const end = start + 0.45;
-
-          gain.gain.setValueAtTime(0, start);
-          gain.gain.linearRampToValueAtTime(0.18, start + 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.001, end);
-
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(ctx.destination);
-
-          osc.start(start);
-          osc.stop(end);
-        });
-      } else if (type === 'victory') {
-        // 80s Arcade victory chime
-        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
-        notes.forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-
-          const start = now + idx * 0.08;
-          const end = start + 0.35;
-
-          gain.gain.setValueAtTime(0, start);
-          gain.gain.linearRampToValueAtTime(0.22, start + 0.02);
-          gain.gain.exponentialRampToValueAtTime(0.001, end);
-
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.1);
+          gain.gain.setValueAtTime(0, now + i * 0.1);
+          gain.gain.linearRampToValueAtTime(0.15, now + i * 0.1 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.4);
           osc.connect(gain);
           gain.connect(ctx.destination);
-
-          osc.start(start);
-          osc.stop(end);
+          osc.start(now + i * 0.1);
+          osc.stop(now + i * 0.1 + 0.45);
+        });
+      } else {
+        // Cheerful victory sound: G5 -> C6
+        const notes = [783.99, 1046.50];
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.12);
+          gain.gain.setValueAtTime(0, now + i * 0.12);
+          gain.gain.linearRampToValueAtTime(0.18, now + i * 0.12 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.12);
+          osc.stop(now + i * 0.12 + 0.4);
         });
       }
-    } catch (e) {
-      console.debug('[Max Reminder] Audio playback suppressed:', e);
+    } catch {
+      // Audio playback suppressed safely
     }
   }
 
-  // Scoped CSS for Shadow DOM
   const STYLES = `
     :host {
       all: initial !important;
@@ -117,285 +93,151 @@
       -webkit-font-smoothing: antialiased !important;
     }
 
-    .max-card-wrapper {
+    .duck-card-wrapper {
       pointer-events: auto !important;
-      width: 320px !important;
-      background: rgba(14, 11, 23, 0.95) !important;
-      backdrop-filter: blur(16px) !important;
-      -webkit-backdrop-filter: blur(16px) !important;
-      border-radius: 20px !important;
-      border: 1.5px solid rgba(255, 0, 127, 0.45) !important;
+      width: 270px !important;
+      background: #f5f2e8 !important;
+      background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px) !important;
+      background-size: 18px 18px !important;
+      border-radius: 22px !important;
+      border: 1px solid #e4dec8 !important;
       box-shadow: 
-        0 12px 36px rgba(0, 0, 0, 0.65),
-        0 0 24px rgba(255, 0, 127, 0.22),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        inset 0 0 16px rgba(0, 245, 212, 0.08) !important;
-      padding: 20px !important;
-      color: #ffffff !important;
+        0 14px 34px rgba(0, 0, 0, 0.14),
+        0 2px 8px rgba(0, 0, 0, 0.06) !important;
+      padding: 18px 20px !important;
+      color: #1a1a1a !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
       position: relative !important;
-      overflow: hidden !important;
-      animation: maxSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-      transition: transform 0.25s ease, border-color 0.3s ease !important;
+      animation: duckSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      transition: transform 0.2s ease, opacity 0.25s ease !important;
     }
 
-    .max-card-wrapper:hover {
-      border-color: rgba(0, 245, 212, 0.6) !important;
-      box-shadow: 
-        0 16px 42px rgba(0, 0, 0, 0.75),
-        0 0 32px rgba(0, 245, 212, 0.28),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    .duck-card-wrapper.duck-hiding {
+      animation: duckSlideOut 0.35s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
     }
 
-    .max-card-wrapper.max-hiding {
-      animation: maxSlideOut 0.4s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
+    .duck-card-wrapper.duck-wiggle {
+      animation: duckWiggle 0.5s ease !important;
     }
 
-    .max-card-wrapper.max-wiggle {
-      animation: maxWiggle 0.6s ease !important;
-    }
-
-    .max-grid-overlay {
-      position: absolute !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      background-image: 
-        linear-gradient(rgba(255, 0, 127, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 0, 127, 0.06) 1px, transparent 1px) !important;
-      background-size: 20px 20px !important;
-      pointer-events: none !important;
-      opacity: 0.6 !important;
-    }
-
-    .max-top-line {
-      position: absolute !important;
-      top: 0 !important;
-      left: 15% !important;
-      right: 15% !important;
-      height: 2px !important;
-      background: linear-gradient(90deg, transparent, #ff007f, #00f5d4, transparent) !important;
-      box-shadow: 0 0 6px #00f5d4 !important;
-    }
-
-    .max-card-header {
+    .duck-card-header {
       width: 100% !important;
       display: flex !important;
       justify-content: space-between !important;
       align-items: center !important;
-      position: relative !important;
-      z-index: 2 !important;
-      margin-bottom: 12px !important;
+      margin-bottom: 8px !important;
     }
 
-    .max-tag-badge {
+    .duck-badge {
       display: inline-flex !important;
       align-items: center !important;
-      gap: 5px !important;
+      gap: 4px !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      color: #555555 !important;
+      background: #e6dfce !important;
       padding: 3px 8px !important;
       border-radius: 999px !important;
-      background: rgba(255, 0, 127, 0.15) !important;
-      border: 1px solid rgba(255, 0, 127, 0.4) !important;
-      font-size: 10px !important;
-      font-weight: 700 !important;
-      letter-spacing: 1.5px !important;
-      text-transform: uppercase !important;
-      color: #ff5493 !important;
-      box-shadow: 0 0 10px rgba(255, 0, 127, 0.2) !important;
     }
 
-    .max-tag-dot {
-      width: 6px !important;
-      height: 6px !important;
-      border-radius: 50% !important;
-      background: #00f5d4 !important;
-      box-shadow: 0 0 6px #00f5d4 !important;
-      animation: maxPulse 1.8s infinite !important;
-    }
-
-    .max-close-btn {
+    .duck-close-btn {
       background: transparent !important;
       border: none !important;
-      color: rgba(255, 255, 255, 0.5) !important;
+      color: #888888 !important;
       font-size: 18px !important;
       line-height: 1 !important;
-      width: 24px !important;
-      height: 24px !important;
+      width: 22px !important;
+      height: 22px !important;
       border-radius: 50% !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       cursor: pointer !important;
-      transition: all 0.2s ease !important;
+      transition: background 0.15s, color 0.15s !important;
     }
 
-    .max-close-btn:hover {
-      color: #ffffff !important;
-      background: rgba(255, 255, 255, 0.15) !important;
-      transform: scale(1.1) !important;
+    .duck-close-btn:hover {
+      background: #e2dbca !important;
+      color: #111111 !important;
     }
 
-    .max-avatar-container {
-      position: relative !important;
-      width: 80px !important;
+    .duck-sprite-container {
+      width: 72px !important;
       height: 80px !important;
-      margin-bottom: 12px !important;
-      z-index: 2 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin-bottom: 6px !important;
     }
 
-    .max-avatar-glow {
-      position: absolute !important;
-      top: -3px !important;
-      left: -3px !important;
-      right: -3px !important;
-      bottom: -3px !important;
-      border-radius: 50% !important;
-      background: conic-gradient(from 180deg at 50% 50%, #ff007f, #00f5d4, #ffb703, #ff007f) !important;
-      opacity: 0.75 !important;
-      filter: blur(5px) !important;
-      animation: maxSpin 8s linear infinite !important;
+    .duck-sprite {
+      width: 70px !important;
+      height: auto !important;
+      image-rendering: -webkit-optimize-contrast !important;
+      animation: duckBob 2.5s ease-in-out infinite !important;
     }
 
-    .max-avatar-img {
-      position: relative !important;
-      width: 80px !important;
-      height: 80px !important;
-      border-radius: 50% !important;
-      object-fit: cover !important;
-      border: 2px solid #00f5d4 !important;
-      background: #140c24 !important;
-      display: block !important;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
-      transition: transform 0.3s ease !important;
-    }
-
-    .max-avatar-container:hover .max-avatar-img {
-      transform: scale(1.05) rotate(2deg) !important;
-    }
-
-    .max-content {
+    .duck-content {
       text-align: center !important;
-      z-index: 2 !important;
       margin-bottom: 14px !important;
       width: 100% !important;
     }
 
-    .max-title {
-      font-size: 15px !important;
+    .duck-title {
+      font-size: 17px !important;
       font-weight: 800 !important;
-      letter-spacing: 0.5px !important;
+      color: #181818 !important;
+      margin-bottom: 3px !important;
+      letter-spacing: -0.3px !important;
+    }
+
+    .duck-message {
+      font-size: 12.5px !important;
+      line-height: 1.4 !important;
+      color: #5a5a5a !important;
+      font-weight: 500 !important;
+    }
+
+    .duck-btn-drink {
+      width: 100% !important;
+      padding: 10px 18px !important;
+      border-radius: 999px !important;
+      border: none !important;
+      background: #2b3a2f !important;
       color: #ffffff !important;
-      margin-bottom: 6px !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       gap: 6px !important;
-      text-shadow: 0 0 12px rgba(0, 245, 212, 0.4) !important;
-    }
-
-    .max-message {
-      font-size: 13.5px !important;
-      line-height: 1.45 !important;
-      color: #e5e7eb !important;
-      font-weight: 450 !important;
-      padding: 0 4px !important;
-      min-height: 38px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-
-    .max-actions {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 8px !important;
-      width: 100% !important;
-      z-index: 2 !important;
-    }
-
-    .max-btn-drink {
-      position: relative !important;
-      overflow: hidden !important;
-      width: 100% !important;
-      padding: 12px 18px !important;
-      border-radius: 12px !important;
-      border: none !important;
-      background: linear-gradient(135deg, #00f5d4 0%, #00b4d8 60%, #4361ee 100%) !important;
-      color: #0c0914 !important;
-      font-size: 14px !important;
-      font-weight: 800 !important;
-      letter-spacing: 0.5px !important;
-      cursor: pointer !important;
-      box-shadow: 
-        0 4px 16px rgba(0, 245, 212, 0.35),
-        0 0 8px rgba(0, 245, 212, 0.2) !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
+      box-shadow: 0 3px 10px rgba(43, 58, 47, 0.22) !important;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
 
-    .max-btn-drink:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 
-        0 6px 22px rgba(0, 245, 212, 0.55),
-        0 0 12px rgba(0, 245, 212, 0.4) !important;
-      filter: brightness(1.08) !important;
+    .duck-btn-drink:hover {
+      background: #1e2921 !important;
+      transform: translateY(-1.5px) !important;
+      box-shadow: 0 5px 14px rgba(43, 58, 47, 0.3) !important;
     }
 
-    .max-btn-drink:active {
-      transform: translateY(1px) scale(0.98) !important;
+    .duck-btn-drink:active {
+      transform: translateY(1px) !important;
     }
 
-    .max-btn-drink.max-success {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-      color: #ffffff !important;
-      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.5) !important;
-      animation: maxPop 0.3s ease !important;
+    .duck-btn-drink.success {
+      background: #2d6a4f !important;
     }
 
-    .max-btn-secondary-row {
-      display: flex !important;
-      justify-content: space-between !important;
-      align-items: center !important;
-      width: 100% !important;
-      padding: 0 4px !important;
-    }
-
-    .max-btn-snooze {
-      background: transparent !important;
-      border: none !important;
-      color: rgba(255, 255, 255, 0.55) !important;
-      font-size: 11.5px !important;
-      font-weight: 500 !important;
-      cursor: pointer !important;
-      padding: 4px 6px !important;
-      border-radius: 6px !important;
-      transition: all 0.2s ease !important;
-    }
-
-    .max-btn-snooze:hover {
-      color: #00f5d4 !important;
-      background: rgba(0, 245, 212, 0.1) !important;
-    }
-
-    .max-session-meta {
-      font-size: 11px !important;
-      color: rgba(255, 255, 255, 0.4) !important;
-      font-family: monospace !important;
-    }
-
-    @keyframes maxSlideIn {
+    @keyframes duckSlideIn {
       0% {
         opacity: 0;
-        transform: translateX(80px) scale(0.92);
-      }
-      70% {
-        transform: translateX(-6px) scale(1.02);
+        transform: translateX(60px) scale(0.95);
       }
       100% {
         opacity: 1;
@@ -403,149 +245,106 @@
       }
     }
 
-    @keyframes maxSlideOut {
+    @keyframes duckSlideOut {
       0% {
         opacity: 1;
         transform: translateX(0) scale(1);
       }
       100% {
         opacity: 0;
-        transform: translateX(80px) scale(0.9);
+        transform: translateX(60px) scale(0.95);
       }
     }
 
-    @keyframes maxWiggle {
+    @keyframes duckWiggle {
       0%, 100% { transform: rotate(0deg); }
-      20% { transform: rotate(-3deg); }
-      40% { transform: rotate(3deg); }
-      60% { transform: rotate(-2deg); }
-      80% { transform: rotate(1deg); }
+      25% { transform: rotate(-4deg); }
+      75% { transform: rotate(4deg); }
     }
 
-    @keyframes maxSpin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes maxPulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
-    }
-
-    @keyframes maxPop {
-      0% { transform: scale(0.95); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
+    @keyframes duckBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
     }
   `;
 
-  class CardManager {
+  class DuckCardManager {
     constructor() {
-      this.hostId = 'max-water-reminder-host';
+      this.hostId = 'duck-water-reminder-host';
       this.hostEl = null;
       this.shadowRoot = null;
       this.isDismissing = false;
     }
 
-    show({ quote = "Hey! 💧 You've been here for 30 minutes. Drink some water!", intervalMinutes = 30, soundEnabled = true } = {}) {
-      // Prevent duplicate reminder cards: if one is already visible, wiggle it and update text
+    show({ quote = "Quack! 💧 Time to drink some water.", soundEnabled = true } = {}) {
       const existingHost = document.getElementById(this.hostId);
       if (existingHost && existingHost.shadowRoot) {
-        const card = existingHost.shadowRoot.querySelector('.max-card-wrapper');
+        const card = existingHost.shadowRoot.querySelector('.duck-card-wrapper');
         if (card) {
-          card.classList.remove('max-wiggle');
-          void card.offsetWidth; // trigger reflow
-          card.classList.add('max-wiggle');
-
-          const messageEl = existingHost.shadowRoot.querySelector('.max-message');
-          if (messageEl && quote) {
-            messageEl.textContent = quote;
-          }
+          card.classList.remove('duck-wiggle');
+          void card.offsetWidth;
+          card.classList.add('duck-wiggle');
+          const msg = existingHost.shadowRoot.querySelector('.duck-message');
+          if (msg && quote) msg.textContent = quote;
         }
         return;
       }
 
-      // Play 80s synth reminder tone if enabled
       if (soundEnabled) {
-        playTone('reminder');
+        playChime(false);
       }
 
-      // Create host element
       this.hostEl = document.createElement('div');
       this.hostEl.id = this.hostId;
       this.shadowRoot = this.hostEl.attachShadow({ mode: 'open' });
 
-      // Resolve character avatar URL
-      let avatarSvgUrl = '';
-      let avatarPngUrl = '';
+      let duckUrl = '';
       try {
         if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
-          avatarSvgUrl = chrome.runtime.getURL('assets/characters/max-avatar.svg');
-          avatarPngUrl = chrome.runtime.getURL('assets/characters/max-avatar.png');
+          duckUrl = chrome.runtime.getURL('assets/characters/duck.png');
         }
       } catch {
-        avatarSvgUrl = '';
-        avatarPngUrl = '';
+        duckUrl = '';
       }
 
       this.shadowRoot.innerHTML = `
-        <style>
-          ${STYLES}
-        </style>
-        <div class="max-card-wrapper" role="dialog" aria-labelledby="max-card-title">
-          <div class="max-grid-overlay"></div>
-          <div class="max-top-line"></div>
-
-          <header class="max-card-header">
-            <div class="max-tag-badge">
-              <span class="max-tag-dot"></span>
-              <span>HYDRATION CHECK</span>
+        <style>${STYLES}</style>
+        <div class="duck-card-wrapper" role="dialog" aria-label="Duck Water Reminder">
+          <header class="duck-card-header">
+            <div class="duck-badge">
+              <span>Duck</span>
+              <span>🦆</span>
             </div>
-            <button class="max-close-btn" id="max-close-btn" title="Dismiss (Esc)" aria-label="Close reminder">×</button>
+            <button class="duck-close-btn" id="duck-close-btn" title="Close" aria-label="Close">×</button>
           </header>
 
-          <div class="max-avatar-container">
-            <div class="max-avatar-glow"></div>
-            <img class="max-avatar-img" 
-                 src="${avatarSvgUrl}" 
-                 alt="Max - Hydration Companion"
-                 onerror="this.onerror=null; this.src='${avatarPngUrl}'" />
+          <div class="duck-sprite-container">
+            <img src="${duckUrl}" alt="Cute Duck" class="duck-sprite">
           </div>
 
-          <div class="max-content">
-            <h2 class="max-title" id="max-card-title">Hey! [ MAX ] 💧</h2>
-            <p class="max-message">${quote}</p>
+          <div class="duck-content">
+            <h2 class="duck-title">Quack! 💧</h2>
+            <p class="duck-message">${quote}</p>
           </div>
 
-          <div class="max-actions">
-            <button class="max-btn-drink" id="max-btn-drink">
-              <span>I DRANK</span>
-              <span>💧</span>
-            </button>
-
-            <div class="max-btn-secondary-row">
-              <button class="max-btn-snooze" id="max-btn-snooze">Snooze 5m</button>
-              <span class="max-session-meta">${intervalMinutes}m interval</span>
-            </div>
-          </div>
+          <button class="duck-btn-drink" id="duck-btn-drink">
+            <span>I DRANK 💧</span>
+          </button>
         </div>
       `;
 
-      // Event listeners inside Shadow DOM
-      const drinkBtn = this.shadowRoot.querySelector('#max-btn-drink');
-      const snoozeBtn = this.shadowRoot.querySelector('#max-btn-snooze');
-      const closeBtn = this.shadowRoot.querySelector('#max-close-btn');
+      const drinkBtn = this.shadowRoot.querySelector('#duck-btn-drink');
+      const closeBtn = this.shadowRoot.querySelector('#duck-close-btn');
 
-      // "I DRANK 💧" Click Handler
-      drinkBtn.addEventListener('click', async () => {
+      drinkBtn.addEventListener('click', () => {
         if (this.isDismissing) return;
         this.isDismissing = true;
 
-        drinkBtn.classList.add('max-success');
-        drinkBtn.innerHTML = `<span>Nice! 💧✨</span>`;
+        drinkBtn.classList.add('success');
+        drinkBtn.innerHTML = `<span>Good job! 🦆✨</span>`;
 
         if (soundEnabled) {
-          playTone('victory');
+          playChime(true);
         }
 
         try {
@@ -553,7 +352,7 @@
             chrome.runtime.sendMessage({ type: MESSAGE_TYPES.CONFIRM_HYDRATION });
           }
         } catch (err) {
-          console.debug('[Max Reminder] confirm drink send failed:', err);
+          console.debug('[Duck Reminder] send confirm drink error:', err);
         }
 
         setTimeout(() => {
@@ -561,31 +360,10 @@
         }, 1100);
       });
 
-      // Snooze Click Handler
-      snoozeBtn.addEventListener('click', () => {
-        if (this.isDismissing) return;
-        this.isDismissing = true;
-
-        try {
-          if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
-            chrome.runtime.sendMessage({
-              type: MESSAGE_TYPES.SNOOZE_REMINDER,
-              data: { minutes: 5 }
-            });
-          }
-        } catch (err) {
-          console.debug('[Max Reminder] snooze send failed:', err);
-        }
-
-        this.dismiss();
-      });
-
-      // Close Button
       closeBtn.addEventListener('click', () => {
         this.dismiss();
       });
 
-      // Escape key listener
       const onKeyDown = (e) => {
         if (e.key === 'Escape') {
           window.removeEventListener('keydown', onKeyDown);
@@ -594,15 +372,14 @@
       };
       window.addEventListener('keydown', onKeyDown);
 
-      // Mount into DOM safely
       (document.body || document.documentElement).appendChild(this.hostEl);
     }
 
     dismiss() {
       if (!this.hostEl) return;
-      const card = this.shadowRoot?.querySelector('.max-card-wrapper');
+      const card = this.shadowRoot?.querySelector('.duck-card-wrapper');
       if (card) {
-        card.classList.add('max-hiding');
+        card.classList.add('duck-hiding');
         setTimeout(() => {
           if (this.hostEl && this.hostEl.parentNode) {
             this.hostEl.parentNode.removeChild(this.hostEl);
@@ -610,7 +387,7 @@
           this.hostEl = null;
           this.shadowRoot = null;
           this.isDismissing = false;
-        }, 400);
+        }, 350);
       } else {
         if (this.hostEl && this.hostEl.parentNode) {
           this.hostEl.parentNode.removeChild(this.hostEl);
@@ -621,17 +398,15 @@
     }
   }
 
-  const cardManager = new CardManager();
+  const manager = new DuckCardManager();
 
-  // Listen for messages from background service worker
   if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const { type, data } = message || {};
 
       if (type === MESSAGE_TYPES.SHOW_REMINDER) {
-        cardManager.show({
+        manager.show({
           quote: data?.quote,
-          intervalMinutes: data?.intervalMinutes,
           soundEnabled: data?.soundEnabled
         });
         sendResponse({ success: true });
@@ -639,7 +414,7 @@
       }
 
       if (type === MESSAGE_TYPES.HIDE_REMINDER) {
-        cardManager.dismiss();
+        manager.dismiss();
         sendResponse({ success: true });
         return true;
       }
